@@ -2,7 +2,8 @@ name: Kubernetes CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 env:
   IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/flask-k8s-app
@@ -11,39 +12,54 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - run: |
-          pip install -r requirements.txt
-          pytest
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Tests
+        run: pytest
 
   build-push:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-      - name: Build & push
-        run: |
-          docker build -t $IMAGE:${{ github.sha }} .
-          docker push $IMAGE:${{ github.sha }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build Image
+        run: docker build -t $IMAGE:${{ github.sha }} .
+
+      - name: Push Image
+        run: docker push $IMAGE:${{ github.sha }}
 
   deploy:
     needs: build-push
-    # CHANGED: This runs on your computer to access Minikube
-    runs-on: [self-hosted]  
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      # We skip 'azure/setup-kubectl' because your laptop already has kubectl
-      # We skip 'Configure kubeconfig' because the runner uses your local ~/.kube/config
-      
-      - name: Deploy to Local Minikube
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start Minikube
         run: |
-          # Ensure the deployment exists locally first or use 'kubectl apply -f deployment.yaml'
-          kubectl set image deployment/flask-app flask=$IMAGE:${{ github.sha }}
-          kubectl rollout status deployment/flask-app
+          # Install minikube
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+          # Start minikube with the docker driver
+          minikube start --driver=docker
+
+      - name: Deploy Application
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl get pods
 
