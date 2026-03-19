@@ -1,3 +1,4 @@
+
 name: Kubernetes CI/CD
 
 on:
@@ -36,7 +37,7 @@ steps:
 uses: actions/checkout@v4
 
 ```
-  - name: Login to Docker Hub
+  - name: Login DockerHub
     run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
   - name: Build Image
@@ -65,10 +66,9 @@ uses: actions/checkout@v4
       sudo apt-get install -y kubectl
 
   - name: Start Minikube
-    run: |
-      minikube start --driver=docker
+    run: minikube start --driver=docker
 
-  - name: Deploy to Kubernetes
+  - name: Deploy App
     run: |
       kubectl apply -f k8s/deployment.yaml
       kubectl apply -f k8s/service.yaml
