@@ -34,9 +34,32 @@ jobs:
   needs: build-push
   runs-on: ubuntu-latest
   steps:
-  - name: Fake Deploy (for lab)
+  - uses: actions/checkout@v4
+
+  - name: Install Docker
     run: |
-      echo "Deploying application..."
-      echo "kubectl set image deployment/flask-app flask=$IMAGE:${{ github.sha }}"
-      echo "kubectl rollout status deployment/flask-app"
-      echo "Deployment successful ✅"
+      sudo apt update
+      sudo apt install -y docker.io
+
+  - name: Start Docker
+    run: |
+      sudo systemctl start docker
+
+  - name: Install Minikube
+    run: |
+      curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+      sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+  - name: Install kubectl
+    run: |
+      sudo apt install -y kubectl
+
+  - name: Start Minikube
+    run: |
+      minikube start --driver=docker
+
+  - name: Deploy to Kubernetes
+    run: |
+      kubectl apply -f k8s/deployment.yaml
+      kubectl apply -f k8s/service.yaml
+      kubectl get pods
