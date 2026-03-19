@@ -1,3 +1,12 @@
+name: Kubernetes CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/flask-k8s-app
+
 jobs:
   test:
     runs-on: ubuntu-latest
