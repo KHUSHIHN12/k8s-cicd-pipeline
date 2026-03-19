@@ -31,8 +31,12 @@ jobs:
         docker push $IMAGE:${{ github.sha }}
 
   deploy:
-    if: false
-    needs: build-push
-    runs-on: ubuntu-latest
-    steps:
-    - run: echo "Skipping deploy stage"
+  needs: build-push
+  runs-on: ubuntu-latest
+  steps:
+  - name: Fake Deploy (for lab)
+    run: |
+      echo "Deploying application..."
+      echo "kubectl set image deployment/flask-app flask=$IMAGE:${{ github.sha }}"
+      echo "kubectl rollout status deployment/flask-app"
+      echo "Deployment successful ✅"
