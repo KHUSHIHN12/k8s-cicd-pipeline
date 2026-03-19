@@ -12,64 +12,31 @@ jobs:
 test:
 runs-on: ubuntu-latest
 steps:
-- name: Checkout
-uses: actions/checkout@v4
-
-```
-  - name: Setup Python
-    uses: actions/setup-python@v4
-    with:
-      python-version: "3.10"
-
-  - name: Install Dependencies
-    run: pip install -r requirements.txt
-
-  - name: Run Tests
-    run: pytest
-```
+- uses: actions/checkout@v4
+- uses: actions/setup-python@v4
+with:
+python-version: "3.10"
+- run: pip install -r requirements.txt
+- run: pytest
 
 build-push:
 needs: test
 runs-on: ubuntu-latest
 steps:
-- name: Checkout
-uses: actions/checkout@v4
-
-```
-  - name: Login DockerHub
-    run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-  - name: Build Image
-    run: docker build -t $IMAGE:${{ github.sha }} .
-
-  - name: Push Image
-    run: docker push $IMAGE:${{ github.sha }}
-```
+- uses: actions/checkout@v4
+- run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+- run: docker build -t $IMAGE:${{ github.sha }} .
+- run: docker push $IMAGE:${{ github.sha }}
 
 deploy:
 needs: build-push
 runs-on: ubuntu-latest
 steps:
-- name: Checkout
-uses: actions/checkout@v4
-
-```
-  - name: Install Minikube
-    run: |
-      curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-      sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-  - name: Install kubectl
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y kubectl
-
-  - name: Start Minikube
-    run: minikube start --driver=docker
-
-  - name: Deploy App
-    run: |
-      kubectl apply -f k8s/deployment.yaml
-      kubectl apply -f k8s/service.yaml
-      kubectl get pods
-```
+- uses: actions/checkout@v4
+- run: curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+- run: sudo install minikube-linux-amd64 /usr/local/bin/minikube
+- run: sudo apt-get update && sudo apt-get install -y kubectl
+- run: minikube start --driver=docker
+- run: kubectl apply -f k8s/deployment.yaml
+- run: kubectl apply -f k8s/service.yaml
+- run: kubectl get pods
