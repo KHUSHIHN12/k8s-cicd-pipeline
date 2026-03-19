@@ -2,7 +2,8 @@ name: Kubernetes CI/CD
 
 on:
 push:
-branches: [ main ]
+branches:
+- main
 
 env:
 IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/flask-k8s-app
@@ -14,7 +15,7 @@ steps:
 - uses: actions/checkout@v4
 - uses: actions/setup-python@v4
 with:
-python-version: '3.10'
+python-version: "3.10"
 - run: pip install -r requirements.txt
 - run: pytest
 
@@ -24,8 +25,8 @@ runs-on: ubuntu-latest
 steps:
 - uses: actions/checkout@v4
 - name: Login to Docker Hub
-run: echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-- name: Build & push
+run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+- name: Build & Push
 run: |
 docker build -t $IMAGE:${{ github.sha }} .
 docker push $IMAGE:${{ github.sha }}
@@ -42,21 +43,6 @@ steps:
 
   - name: Install Minikube
     run: |
-      curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-      sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-  - name: Install kubectl
-    run: |
-      sudo apt update
-      sudo apt install -y kubectl
-
-  - name: Start Minikube
-    run: |
-      minikube start --driver=docker
-
-  - name: Deploy to Kubernetes
-    run: |
-      kubectl apply -f k8s/deployment.yaml
-      kubectl apply -f k8s/service.yaml
-      kubectl get pods
+      curl -LO https://
 ```
+
